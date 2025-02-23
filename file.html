@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edu-Proctuator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .loading-spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .offline-badge {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+</style>
+<body class="bg-gray-50">
+    <div id="offlineIndicator" class="hidden offline-badge bg-red-500 text-white px-4 py-2 rounded-full">
+        You are offline - Data will sync when connected
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">Edu-Proctuator</h1>
+                    <button onclick="startVoiceAssistant()" class="bg-blue-700 p-2 rounded-full">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userDisplay" class="hidden md:inline">Welcome, Teacher</span>
+                    <button onclick="toggleDarkMode()" class="p-2">
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Task Management Section -->
+            <div class="col-span-2">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Attendance & Task Management</h2>
+                    
+                    <!-- Attendance Form -->
+                    <div class="mb-6">
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            <select id="classSelect" class="border rounded p-2">
+                                <option value="">Select Class</option>
+                                <option value="class-a">Class A</option>
+                                <option value="class-b">Class B</option>
+                            </select>
+                            <select id="subjectSelect" class="border rounded p-2">
+                                <option value="">Select Subject</option>
+                                <option value="math">Mathematics</option>
+                                <option value="science">Science</option>
+                            </select>
+                            <button onclick="markAttendance()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                Mark Attendance
+                            </button>
+                        </div>
+                        
+                        <div id="attendanceList" class="space-y-2">
+                            <!-- Attendance entries will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Task Assignment -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold mb-3">Assign Tasks</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="taskTitle" placeholder="Task Title" class="w-full border rounded p-2">
+                            <textarea id="taskDescription" placeholder="Task Description" class="w-full border rounded p-2"></textarea>
+                            <div class="flex gap-4">
+                                <input type="date" id="taskDueDate" class="border rounded p-2">
+                                <button onclick="assignTask()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                    Assign Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard & Insights -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Insights Dashboard</h2>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h3 class="font-medium">Attendance Rate</h3>
+                            <div class="text-2xl font-bold text-blue-600">85%</div>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h3 class="font-medium">Task Completion</h3>
+                            <div class="text-2xl font-bold text-green-600">78%</div>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h3 class="font-medium">Active Students</h3>
+                            <div class="text-2xl font-bold text-purple-600">45</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication Center -->
+                <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                    <h2 class="text-xl font-semibold mb-4">Communication Center</h2>
+                    <div class="space-y-3">
+                        <select id="messageTemplate" class="w-full border rounded p-2">
+                            <option value="">Select Message Template</option>
+                            <option value="absence">Absence Notice</option>
+                            <option value="reminder">Task Reminder</option>
+                        </select>
+                        <textarea id="messageContent" class="w-full border rounded p-2" placeholder="Custom message..."></textarea>
+                        <button onclick="sendNotification()" class="w-full bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+                            Send Notification
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Forum -->
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Collaboration Forum</h2>
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <input type="text" id="forumTopic" placeholder="Discussion Topic" class="flex-1 border rounded p-2">
+                    <button onclick="createDiscussion()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                        Start Discussion
+                    </button>
+                </div>
+                <div id="forumThreads" class="space-y-4">
+                    <!-- Forum threads will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables for offline support
+        let isOnline = true;
+        let pendingSync = [];
+        const APP_SLUG = 'edu-manage-pro-001';
+        const userId = localStorage.getItem('userId') || 'user-' + Date.now();
+        localStorage.setItem('userId', userId);
+
+        // Check online status
+        window.addEventListener('online', handleOnlineStatus);
+        window.addEventListener('offline', handleOnlineStatus);
+
+        function handleOnlineStatus(e) {
+            isOnline = navigator.onLine;
+            document.getElementById('offlineIndicator').classList.toggle('hidden', isOnline);
+            if (isOnline && pendingSync.length > 0) {
+                syncPendingData();
+            }
+        }
+
+        // Voice Assistant
+        function startVoiceAssistant() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    alert('Listening... Speak now');
+                };
+
+                recognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript.toLowerCase();
+                    processVoiceCommand(command);
+                };
+
+                recognition.start();
+            } else {
+                alert('Voice recognition is not supported in your browser');
+            }
+        }
+
+        function processVoiceCommand(command) {
+            if (command.includes('mark attendance')) {
+                markAttendance();
+            } else if (command.includes('create task')) {
+                document.getElementById('taskTitle').focus();
+            } else if (command.includes('send notification')) {
+                document.getElementById('messageContent').focus();
+            }
+        }
+
+        // Attendance Management
+        async function markAttendance() {
+            const classId = document.getElementById('classSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            
+            if (!classId || !subject) {
+                alert('Please select both class and subject');
+                return;
+            }
+
+            const students = [
+                { id: 1, name: 'John Doe', present: true },
+                { id: 2, name: 'Jane Smith', present: false },
+                // Add more students as needed
+            ];
+
+            const attendanceData = {
+                classId,
+                subject,
+                date: new Date().toISOString(),
+                students
+            };
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer TCOiLaQdqIgknEmPVRYyMCqzcT32',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: 'attendance',
+                        data: attendanceData
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Attendance marked successfully');
+                    // Send notifications for absent students
+                    const absentStudents = students.filter(s => !s.present);
+                    sendAbsenteeNotifications(absentStudents);
+                }
+            } catch (error) {
+                if (!isOnline) {
+                    pendingSync.push({
+                        type: 'attendance',
+                        data: attendanceData
+                    });
+                    alert('Attendance saved offline. Will sync when online.');
+                } else {
+                    alert('Error marking attendance');
+                }
+            }
+        }
+
+        // Task Management
+        async function assignTask() {
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            const dueDate = document.getElementById('taskDueDate').value;
+
+            if (!title || !description || !dueDate) {
+                alert('Please fill all task details');
+                return;
+            }
+
+            const taskData = {
+                title,
+                description,
+                dueDate,
+                assignedDate: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer TCOiLaQdqIgknEmPVRYyMCqzcT32',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: 'tasks',
+                        data: taskData
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Task assigned successfully');
+                    // Clear form
+                    document.getElementById('taskTitle').value = '';
+                    document.getElementById('taskDescription').value = '';
+                    document.getElementById('taskDueDate').value = '';
+                }
+            } catch (error) {
+                if (!isOnline) {
+                    pendingSync.push({
+                        type: 'task',
+                        data: taskData
+                    });
+                    alert('Task saved offline. Will sync when online.');
+                } else {
+                    alert('Error assigning task');
+                }
+            }
+        }
+
+        // Notification System
+        async function sendAbsenteeNotifications(absentStudents) {
+            for (const student of absentStudents) {
+                const message = `Dear Parent, This is to inform you that ${student.name} was absent today.`;
+                await sendNotification(message, student.id);
+            }
+        }
+
+        async function sendNotification(message = null, studentId = null) {
+            const template = document.getElementById('messageTemplate').value;
+            const content = message || document.getElementById('messageContent').value;
+
+            if (!template && !message) {
+                alert('Please select a template or enter a custom message');
+                return;
+            }
+
+            const notificationData = {
+                message: content,
+                template,
+                studentId,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer TCOiLaQdqIgknEmPVRYyMCqzcT32',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: 'notifications',
+                        data: notificationData
+                    })
+                });
+
+                if (response.ok) {
+                    if (!studentId) alert('Notification sent successfully');
+                    document.getElementById('messageContent').value = '';
+                    document.getElementById('messageTemplate').value = '';
+                }
+            } catch (error) {
+                if (!isOnline) {
+                    pendingSync.push({
+                        type: 'notification',
+                        data: notificationData
+                    });
+                    alert('Notification saved offline. Will sync when online.');
+                } else {
+                    alert('Error sending notification');
+                }
+            }
+        }
+
+        // Forum Management
+        async function createDiscussion() {
+            const topic = document.getElementById('forumTopic').value;
+
+            if (!topic) {
+                alert('Please enter a discussion topic');
+                return;
+            }
+
+            const discussionData = {
+                topic,
+                createdAt: new Date().toISOString(),
+                createdBy: userId,
+                replies: []
+            };
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer TCOiLaQdqIgknEmPVRYyMCqzcT32',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: 'forum',
+                        data: discussionData
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Discussion created successfully');
+                    document.getElementById('forumTopic').value = '';
+                    loadForumThreads();
+                }
+            } catch (error) {
+                if (!isOnline) {
+                    pendingSync.push({
+                        type: 'forum',
+                        data: discussionData
+                    });
+                    alert('Discussion saved offline. Will sync when online.');
+                } else {
+                    alert('Error creating discussion');
+                }
+            }
+        }
+
+        // Sync pending data when online
+        async function syncPendingData() {
+            while (pendingSync.length > 0) {
+                const item = pendingSync.shift();
+                try {
+                    switch (item.type) {
+                        case 'attendance':
+                            await markAttendance(item.data);
+                            break;
+                        case 'task':
+                            await assignTask(item.data);
+                            break;
+                        case 'notification':
+                            await sendNotification(item.data.message, item.data.studentId);
+                            break;
+                        case 'forum':
+                            await createDiscussion(item.data);
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Error syncing data:', error);
+                    pendingSync.push(item); // Put back in queue if failed
+                    break;
+                }
+            }
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            // Save preference to localStorage
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            handleOnlineStatus();
+            // Load dark mode preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
