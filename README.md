@@ -1,6 +1,5 @@
 # edu-procurator
-Edu-Proctuator
-Edu-Proctuator is a web-based educational management system designed to help teachers and educators manage attendance, tasks, communications, and student collaboration efficiently. The application features a responsive design and offline capability to ensure uninterrupted functionality.
+edu-procurator is a web-based educational management system designed to help teachers and educators manage attendance, tasks, communications, and student collaboration efficiently. The application features a responsive design and offline capability to ensure uninterrupted functionality.
 Features
 1. Attendance Management
 
